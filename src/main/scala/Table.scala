@@ -5,6 +5,9 @@ import TestTables.tableFunctional
 import TestTables.tableObjectOriented
 
 trait FilterCond {
+  // these are useful for the intuitive infix notation
+  // e.g. the following expression is a filter condition:
+  // Field("PL", x=>true) && Field("PL", x=> false)
   def &&(other: FilterCond): FilterCond = ???
   def ||(other: FilterCond): FilterCond = ???
   // fails if the column name is not present in the row
@@ -12,7 +15,11 @@ trait FilterCond {
 }
 case class Field(colName: String, predicate: String => Boolean) extends FilterCond {
   // 2.2.
-  override def eval(r: Row): Option[Boolean] = ???
+  override def eval(r: Row): Option[Boolean] = {
+    val index = r.get(colName) // reutrneaza None daca e nu exista
+    if(index.isEmpty) None
+    else Option(predicate(index.get))
+  }
 }
 
 case class And(f1: FilterCond, f2: FilterCond) extends FilterCond {
@@ -74,10 +81,21 @@ class Table (columnNames: Line, tabular: List[List[String]]) {
   def getTabular : List[List[String]] = tabular
 
   // 1.1
-  override def toString: String = ???
+  override def toString: String = this.getColumnNames.mkString(",") + "\n" +
+                 this.getTabular.map(_.mkString(",")).mkString("\n")
 
   // 2.1
-  def select(columns: Line): Option[Table] = ???
+  def select(columns: Line): Option[Table] = {
+    // iau indexii colanelor cautate
+    val indexOfCollumns = columns.map(col => getColumnNames.indexOf(col))
+    if(indexOfCollumns.head == -1) None // verific daca am gasit ceva
+    else {
+      // iau doar coloanele cautate
+      val newTabular = getTabular.map(row => indexOfCollumns.map(col => row(col)))
+      // valoarea returnata
+      Option(new Table(columns, newTabular))
+    }
+  }
 
   // 2.2
   def filter(cond: FilterCond): Option[Table] = ???
@@ -91,5 +109,10 @@ class Table (columnNames: Line, tabular: List[List[String]]) {
 
 object Table {
   // 1.2
-  def apply(s: String): Table = ???
+  def apply(s: String): Table = {
+    val lines = s.split("\n").toList // impart liniile dupa \n si le pun intr-o lista
+    val columnNames = lines.head.split(",").toList
+    val tabular = lines.tail.map(_.split(",").toList)
+    new Table(columnNames, tabular)
+  }
 }
