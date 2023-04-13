@@ -50,79 +50,79 @@ class Tests extends munit.FunSuite {
     assertEquals(result.get.getTabular, expectedContent, "table contents don't match")
   }
 
-//  test("2.2 Field non-existent column - 4p") {
-//    val condition = Field("Logic", _ == "true")
-//    val result = TestTables.table2.filter(condition)
-//
-//    assert(result.isEmpty, "result is not empty")
-//  }
-//
-//  test("2.2 And - 4p") {
-//    val condition = And(
-//      Field("Object-Oriented", _ == "true"),
-//      Field("Functional", _ == "true")
-//    )
-//    val result = TestTables.table2.filter(condition)
-//
-//    val expectedContent = List(
-//      List("Scala", "true", "true"),
-//    )
-//
-//    assertEquals(result.get.getColumnNames, TestTables.table2.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular, expectedContent, "table contents don't match")
-//  }
+  test("2.2 Field non-existent column - 4p") {
+    val condition = Field("Logic", _ == "true")
+    val result = TestTables.table2.filter(condition)
 
-//  test("2.2 Or - 4p") {
-//    val condition = Or(
-//      Field("Object-Oriented", _ == "true"),
-//      Field("Functional", _ == "true")
-//    )
-//    val result = TestTables.table2.filter(condition)
-//
-//    assert(result.nonEmpty, "result is empty")
-//
-//    val expectedContent = List(
-//      List("Haskell", "false", "true"),
-//      List("Scala", "true", "true"),
-//      List("COOL", "true", "false"),
-//    )
-//
-//    assertEquals(result.get.getColumnNames, TestTables.table2.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular, expectedContent, "table contents don't match")
-//  }
-//
-//  test("2.2 Error propagation - 4p") {
-//    val condition = Or(
-//      Field("Object-Oriented", _ == "true"),
-//      Field("Logic", _ == "true")
-//    )
-//    val result = TestTables.table2.filter(condition)
-//
-//    assert(result.isEmpty, "result is not empty")
-//  }
-//
-//  test("2.3 - 5p") {
-//    val result = TestTables.table2.newCol("EsoLang", "false")
-//    val expectedColumns = List("Language", "Object-Oriented", "Functional", "EsoLang")
-//    val expectedContent = List(
-//      List("Haskell", "false", "true", "false"),
-//      List("Scala", "true", "true", "false"),
-//      List("COOL", "true", "false", "false"),
-//      List("Prolog", "false", "false", "false")
-//    )
-//
-//    assertEquals(result.getColumnNames, expectedColumns, "column names don't match")
-//    assertEquals(result.getTabular.sortBy(_.head), expectedContent.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("2.4 merge languages - 15p") {
-//    val result = TestTables.table3.merge("Language", TestTables.table4)
-//    assert(result.nonEmpty, "result is empty")
-//    println(result.get)
-//    assertEquals(result.get.getColumnNames, TestTables.table3_4_merged.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.table3_4_merged.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
+    assert(result.isEmpty, "result is not empty")
+  }
+
+  test("2.2 And - 4p") {
+    val condition = And(
+      Field("Object-Oriented", _ == "true"),
+      Field("Functional", _ == "true")
+    )
+    val result = TestTables.table2.filter(condition)
+
+    val expectedContent = List(
+      List("Scala", "true", "true"),
+    )
+
+    assertEquals(result.get.getColumnNames, TestTables.table2.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular, expectedContent, "table contents don't match")
+  }
+
+  test("2.2 Or - 4p") {
+    val condition = Or(
+      Field("Object-Oriented", _ == "true"),
+      Field("Functional", _ == "true")
+    )
+    val result = TestTables.table2.filter(condition)
+
+    assert(result.nonEmpty, "result is empty")
+
+    val expectedContent = List(
+      List("Haskell", "false", "true"),
+      List("Scala", "true", "true"),
+      List("COOL", "true", "false"),
+    )
+
+    assertEquals(result.get.getColumnNames, TestTables.table2.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular, expectedContent, "table contents don't match")
+  }
+
+  test("2.2 Error propagation - 4p") {
+    val condition = Or(
+      Field("Object-Oriented", _ == "true"),
+      Field("Logic", _ == "true")
+    )
+    val result = TestTables.table2.filter(condition)
+
+    assert(result.isEmpty, "result is not empty")
+  }
+
+  test("2.3 - 5p") {
+    val result = TestTables.table2.newCol("EsoLang", "false")
+    val expectedColumns = List("Language", "Object-Oriented", "Functional", "EsoLang")
+    val expectedContent = List(
+      List("Haskell", "false", "true", "false"),
+      List("Scala", "true", "true", "false"),
+      List("COOL", "true", "false", "false"),
+      List("Prolog", "false", "false", "false")
+    )
+
+    assertEquals(result.getColumnNames, expectedColumns, "column names don't match")
+    assertEquals(result.getTabular.sortBy(_.head), expectedContent.sortBy(_.head), "table contents don't match")
+  }
+
+  test("2.4 merge languages - 15p") {
+    val result = TestTables.table3.merge("Language", TestTables.table4)
+    assert(result.nonEmpty, "result is empty")
+    println(result.get)
+    assertEquals(result.get.getColumnNames, TestTables.table3_4_merged.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.table3_4_merged.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
 //  test("2.4 missing key column - 5p") {
 //    assert(TestTables.table3.merge("Functional", TestTables.table4).isEmpty, "result should be empty, table 4 has no 'Functional' column")
 //    assert(TestTables.table3.merge("Object-Oriented", TestTables.table4).isEmpty, "result should be empty, table 3 has no 'Object-Oriented' column")
