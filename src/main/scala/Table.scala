@@ -8,9 +8,9 @@ trait FilterCond {
   // these are useful for the intuitive infix notation
   // e.g. the following expression is a filter condition:
   // Field("PL", x=>true) && Field("PL", x=> false)
-  def &&(other: FilterCond): FilterCond = ???
+  def &&(other: FilterCond): FilterCond = And(this, other)
 
-  def ||(other: FilterCond): FilterCond = ???
+  def ||(other: FilterCond): FilterCond = Or(this, other)
 
   // fails if the column name is not present in the row
   def eval(r: Row): Option[Boolean]
@@ -128,30 +128,81 @@ class Table(columnNames: Line, tabular: List[List[String]]) {
 
   // 2.3.
   def newCol(name: String, defaultVal: String): Table = {
-    val newColumnNames:Line = getColumnNames :+ name // adaug numele coloanei noi
+    val newColumnNames: Line = getColumnNames :+ name // adaug numele coloanei noi
     //adaug valorile default in tabela
-    val newTabular:List[List[String]] = getTabular.map(row => row :+ defaultVal)
+    val newTabular: List[List[String]] = getTabular.map(row => row :+ defaultVal)
     new Table(newColumnNames, newTabular)
   }
 
   // 2.4.
   def merge(key: String, other: Table): Option[Table] = {
-    val default = ""
-    getColumnNames.indexOf(key) match {
-      case -1 => None // nu exista coloana comuna
-      case x => {
-        val commonCollumns = getColumnNames.intersect(other.getColumnNames) // coloanele comune
-        val newCollumns = getColumnNames +: (other.getColumnNames diff commonCollumns) // coloanele noi
-        val newTabular = getTabular.map(row => {
-          val keyVal = row(x) // valoarea coloanei comune
-          val otherRow = other.getTabular.find(row => row(other.getColumnNames.indexOf(key)) == keyVal) // randul din tabela 2
-          if (otherRow.isEmpty) row ++ List.fill(other.getColumnNames.length - commonCollumns.length)(default) // daca nu exista randul in tabela 2
-          else row ++ otherRow.get.diff(commonCollumns) // daca exista randul in tabela 2
-        })
-      }
+    val h1 = this.getColumnNames
+    val h2 = other.getColumnNames
 
+    val common = h1.intersect(h2)
+    val finalCol = h1 ++ h2.diff(common)
+
+    val indexKey1 = h1.indexOf(key)
+    val indexKey2 = h2.indexOf(key)
+    if (indexKey1 == -1 || indexKey2 == -1) None // nu exista cheia in una din matrici
+    else {
+      val commonColumnsNoKey = common.filter(x => x != key)
+      val keyColumn = key +: (this.getTabular ::: other.getTabular)
+        .flatMap(x => x.drop(indexKey1).head :: Nil).distinct // lista de coloane comune
+      // iau fiecare cheie de pe colaona cheie
+      val col = keyColumn.tail.flatMap(x => {
+        // indexul cheii curente in matricea 1 si 2
+        val index1 = this.getTabular.transpose.drop(indexKey1).head.indexOf(x)
+        val index2 = other.getTabular.transpose.drop(indexKey2).head.indexOf(x)
+        commonColumnsNoKey.map(y => { // fiecare coloana comuna
+          if (index2 == -1) { // exista cheia doar in matricea 1
+            // iau valoarea de pe coloana comuna curenta din matricea 1
+            val v = this.getTabular.drop(index1).head.drop(h1.indexOf(y)).head
+            v
+          } else if (index1 == -1) { // pt 2
+            val v = other.getTabular.drop(index2).head.drop(h2.indexOf(y)).head
+            v
+          } else {
+            // exista in ambele matrici cheia deci iau valorile
+            val v1 = this.getTabular.drop(index1).head.drop(h1.indexOf(y)).head
+            val v2 = other.getTabular.drop(index2).head.drop(h2.indexOf(y)).head
+            if (v1 == v2) v1 else v1 + ";" + v2 // daca sunt la fel ramane una altfel amandoua
+          }
+        })
+      }).grouped(keyColumn.size - 1).toList
+
+      val m1Dif = h1.filter(x => x != key && !common.contains(x)) // coloanele ramase din matricea 1
+      val m2Dif = h2.filter(x => x != key && !common.contains(x)) // coloanele ramase din matricea 2
+
+      val restOfColumns1 = keyColumn.tail.flatMap(x => {
+        val currentKey = this.getTabular.transpose.drop(indexKey1).head.indexOf(x)
+        m1Dif.map(y => { // pun valoarea necesara din matricea 1
+          if (currentKey == -1) ""
+          else {
+            val v = this.getTabular.drop(currentKey).head.drop(h1.indexOf(y)).head
+            v
+          }
+        })
+      }).grouped(keyColumn.size - 1).toList
+
+      val restOfColumns2 = keyColumn.tail.flatMap(x => {
+        val currentKey = other.getTabular.transpose.drop(indexKey2).head.indexOf(x)
+        m2Dif.map(y => {
+          if (currentKey == -1) ""
+          else {
+            val v = other.getTabular.drop(currentKey).head.drop(h2.indexOf(y)).head
+            v
+          }
+        })
+      }).grouped(keyColumn.size - 1).toList
+
+      val newMatrix = (keyColumn
+        :: restOfColumns1.flatMap(x => m1Dif.drop(restOfColumns1.indexOf(x)).head +: x)
+        :: col.flatMap(x => commonColumnsNoKey.drop(col.indexOf(x)).head +: x)
+        :: restOfColumns2.map(x => m2Dif.drop(restOfColumns2.indexOf(x)).head +: x)).transpose
+
+      Option(Table(newMatrix.map(_.mkString(",")).mkString("\n")))
     }
-    ???
   }
 }
 
