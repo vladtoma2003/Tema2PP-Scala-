@@ -118,12 +118,9 @@ class Tests extends munit.FunSuite {
   test("2.4 merge languages - 15p") {
     val result = TestTables.table3.merge("Language", TestTables.table4)
     assert(result.nonEmpty, "result is empty")
-//    println(result.toString)
     assertEquals(result.get.getColumnNames, TestTables.table3_4_merged.getColumnNames, "column names don't match")
     assertEquals(result.get.getTabular.sortBy(_.head), TestTables.table3_4_merged.getTabular.sortBy(_.head), "table contents don't match")
-//    println("\n\n" + result.get.getTabular.sortBy(_.head).toString())
-//    println("====================================\n" + TestTables.table3_4_merged.getTabular
-//      .sortBy(_.head).toString)
+
   }
 
   test("2.4 missing key column - 5p") {
@@ -131,53 +128,53 @@ class Tests extends munit.FunSuite {
     assert(TestTables.table3.merge("Object-Oriented", TestTables.table4).isEmpty, "result should be empty, table 3 has no 'Object-Oriented' column")
     assert(TestTables.table3.merge("EsoLang", TestTables.table4).isEmpty, "result should be empty, neither table has the 'EsoLang' column")
   }
-//
-//  test("3 NewCol + Value - 5p") {
-//    val query = NewCol("New Column", "No", Value(TestTables.tableObjectOriented))
-//    val result = query.eval
-//    assertEquals(result.get.getColumnNames, TestTables.test3_newCol_Value.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_newCol_Value.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3 Select + Value - 5p") {
-//    val query = Select(List("Language", "Original purpose"), Value(TestTables.tableFunctional))
-//    val result = query.eval
-//    assertEquals(result.get.getColumnNames, TestTables.test3_Select_Value.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Select_Value.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3 Merge + Value - 5p") {
-//    val query = Merge("Language", Value(TestTables.tableObjectOriented), Value(TestTables.tableFunctional))
-//    val result = query.eval
-//    assertEquals(result.get.getColumnNames, TestTables.test3_Merge_Value.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Merge_Value.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3 Filter + Value - 10p") {
-//    val query = Filter(
-//      And(Field("Original purpose", x => !x.contains("General")), Field("Language", x => !x.startsWith("C"))),
-//      Value(TestTables.tableObjectOriented))
-//    val result = query.eval
-//    assertEquals(result.get.getColumnNames, TestTables.test3_Filter_Value.getColumnNames, "column names don't match")
-//    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Filter_Value.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3.1 - 5p") {
-//    val result = TestTables.programmingLanguages1
-//    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages1.getColumnNames, "column names don't match")
-//    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages1.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3.2 - 5p") {
-//    val result = TestTables.programmingLanguages2
-//    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages2.getColumnNames, "column names don't match")
-//    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages2.getTabular.sortBy(_.head), "table contents don't match")
-//  }
-//
-//  test("3.3 - 5p") {
-//    val result = TestTables.programmingLanguages3
-//    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages3.getColumnNames, "column names don't match")
-//    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages3.getTabular.sortBy(_.head), "table contents don't match")
-//  }
+
+  test("3 NewCol + Value - 5p") {
+    val query = NewCol("New Column", "No", Value(TestTables.tableObjectOriented))
+    val result = query.eval
+    assertEquals(result.get.getColumnNames, TestTables.test3_newCol_Value.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_newCol_Value.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3 Select + Value - 5p") {
+    val query = Select(List("Language", "Original purpose"), Value(TestTables.tableFunctional))
+    val result = query.eval
+    assertEquals(result.get.getColumnNames, TestTables.test3_Select_Value.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Select_Value.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3 Merge + Value - 5p") {
+    val query = Merge("Language", Value(TestTables.tableObjectOriented), Value(TestTables.tableFunctional))
+    val result = query.eval
+    assertEquals(result.get.getColumnNames, TestTables.test3_Merge_Value.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Merge_Value.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3 Filter + Value - 10p") {
+    val query = Filter(
+      And(Field("Original purpose", x => !x.contains("General")), Field("Language", x => !x.startsWith("C"))),
+      Value(TestTables.tableObjectOriented))
+    val result = query.eval
+    assertEquals(result.get.getColumnNames, TestTables.test3_Filter_Value.getColumnNames, "column names don't match")
+    assertEquals(result.get.getTabular.sortBy(_.head), TestTables.test3_Filter_Value.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3.1 - 5p") {
+    val result = TestTables.programmingLanguages1
+    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages1.getColumnNames, "column names don't match")
+    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages1.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3.2 - 5p") {
+    val result = TestTables.programmingLanguages2
+    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages2.getColumnNames, "column names don't match")
+    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages2.getTabular.sortBy(_.head), "table contents don't match")
+  }
+
+  test("3.3 - 5p") {
+    val result = TestTables.programmingLanguages3
+    assertEquals(result.getColumnNames, TestTables.ref_programmingLanguages3.getColumnNames, "column names don't match")
+    assertEquals(result.getTabular.sortBy(_.head), TestTables.ref_programmingLanguages3.getTabular.sortBy(_.head), "table contents don't match")
+  }
 
 }

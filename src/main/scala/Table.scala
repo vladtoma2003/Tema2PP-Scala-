@@ -56,7 +56,7 @@ trait Query {
   Always succeeds
  */
 case class Value(t: Table) extends Query {
-  override def eval: Option[Table] = ???
+  override def eval: Option[Table] = Option(t) // poate Some
 }
 
 /*
@@ -64,7 +64,7 @@ case class Value(t: Table) extends Query {
   Fails with None if some rows are not present in the resulting table
  */
 case class Select(columns: Line, target: Query) extends Query {
-  override def eval: Option[Table] = ???
+  override def eval: Option[Table] = target.eval.get.select(columns)
 }
 
 /*
@@ -72,7 +72,7 @@ case class Select(columns: Line, target: Query) extends Query {
   Success depends only on the success of the target
  */
 case class Filter(condition: FilterCond, target: Query) extends Query {
-  override def eval: Option[Table] = ???
+  override def eval: Option[Table] = target.eval.get.filter(condition)
 }
 
 /*
@@ -80,7 +80,7 @@ case class Filter(condition: FilterCond, target: Query) extends Query {
   Success depends only on the success of the target
  */
 case class NewCol(name: String, defaultVal: String, target: Query) extends Query {
-  override def eval: Option[Table] = ???
+  override def eval: Option[Table] = Option(target.eval.get.newCol(name, defaultVal))
 }
 
 /*
@@ -88,7 +88,7 @@ case class NewCol(name: String, defaultVal: String, target: Query) extends Query
   Success depends on whether the key exists in both tables or not AND on the success of the target
  */
 case class Merge(key: String, t1: Query, t2: Query) extends Query {
-  override def eval: Option[Table] = ???
+  override def eval: Option[Table] = t1.eval.get.merge(key, t2.eval.get)
 }
 
 
@@ -128,10 +128,13 @@ class Table(columnNames: Line, tabular: List[List[String]]) {
 
   // 2.3.
   def newCol(name: String, defaultVal: String): Table = {
+    println("default: " + defaultVal)
     val newColumnNames: Line = getColumnNames :+ name // adaug numele coloanei noi
     //adaug valorile default in tabela
-    val newTabular: List[List[String]] = getTabular.map(row => row :+ defaultVal)
-    new Table(newColumnNames, newTabular)
+    println("tabular: " + getTabular)
+    val newTabular: List[List[String]] = getTabular.map(row => row ::: List(defaultVal))
+    Table((newColumnNames :: newTabular).map(_.mkString(",")).mkString("\n"))
+    //    new Table(newColumnNames, newTabular)
   }
 
   // 2.4.
@@ -169,37 +172,42 @@ class Table(columnNames: Line, tabular: List[List[String]]) {
             if (v1 == v2) v1 else v1 + ";" + v2 // daca sunt la fel ramane una altfel amandoua
           }
         })
-      }).grouped(keyColumn.size - 1).toList
+      }).grouped(commonColumnsNoKey.size).toList.transpose
 
       val m1Dif = h1.filter(x => x != key && !common.contains(x)) // coloanele ramase din matricea 1
       val m2Dif = h2.filter(x => x != key && !common.contains(x)) // coloanele ramase din matricea 2
 
-      val restOfColumns1 = keyColumn.tail.flatMap(x => {
-        val currentKey = this.getTabular.transpose.drop(indexKey1).head.indexOf(x)
-        m1Dif.map(y => { // pun valoarea necesara din matricea 1
-          if (currentKey == -1) ""
-          else {
-            val v = this.getTabular.drop(currentKey).head.drop(h1.indexOf(y)).head
-            v
-          }
-        })
-      }).grouped(keyColumn.size - 1).toList
+      val restOfColumns1 = if (m1Dif.nonEmpty) {
+        keyColumn.tail.flatMap(x => {
+          val currentKey = this.getTabular.transpose.drop(indexKey1).head.indexOf(x)
+          m1Dif.map(y => { // pun valoarea necesara din matricea 1
+            if (currentKey == -1) ""
+            else {
+              val v = this.getTabular.drop(currentKey).head.drop(h1.indexOf(y)).head
+              v
+            }
+          })
+        }).grouped(m1Dif.size).toList.transpose
+      } else List()
 
-      val restOfColumns2 = keyColumn.tail.flatMap(x => {
-        val currentKey = other.getTabular.transpose.drop(indexKey2).head.indexOf(x)
-        m2Dif.map(y => {
-          if (currentKey == -1) ""
-          else {
-            val v = other.getTabular.drop(currentKey).head.drop(h2.indexOf(y)).head
-            v
-          }
-        })
-      }).grouped(keyColumn.size - 1).toList
+      val restOfColumns2 = if (m2Dif.nonEmpty) {
+        keyColumn.tail.flatMap(x => {
+          val currentKey = other.getTabular.transpose.drop(indexKey2).head.indexOf(x)
+          m2Dif.map(y => {
+            if (currentKey == -1) ""
+            else {
+              val v = other.getTabular.drop(currentKey).head.drop(h2.indexOf(y)).head
+              v
+            }
+          })
+        }).grouped(m2Dif.size).toList.transpose
+      } else List()
 
-      val newMatrix = (keyColumn
-        :: restOfColumns1.flatMap(x => m1Dif.drop(restOfColumns1.indexOf(x)).head +: x)
-        :: col.flatMap(x => commonColumnsNoKey.drop(col.indexOf(x)).head +: x)
-        :: restOfColumns2.map(x => m2Dif.drop(restOfColumns2.indexOf(x)).head +: x)).transpose
+      val newMatrix = (List(keyColumn)
+        :: restOfColumns1.map(x => m1Dif.drop(restOfColumns1.indexOf(x)).head +: x)
+        :: col.map(x => commonColumnsNoKey.drop(col.indexOf(x)).head +: x)
+        :: restOfColumns2.map(x => m2Dif.drop(restOfColumns2.indexOf(x)).head +: x)
+        :: List()).filter(x => x.nonEmpty).flatten.transpose
 
       Option(Table(newMatrix.map(_.mkString(",")).mkString("\n")))
     }
@@ -211,7 +219,7 @@ object Table {
   def apply(s: String): Table = {
     val lines = s.split("\n").toList // impart liniile dupa \n si le pun intr-o lista
     val columnNames = lines.head.split(",").toList
-    val tabular = lines.tail.map(_.split(",").toList)
+    val tabular = lines.tail.map(_.split(",", -1).toList)
     new Table(columnNames, tabular)
   }
 }
