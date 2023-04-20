@@ -1,3 +1,4 @@
+import javax.management.Query
 import scala.io.Source
 
 object TestTables {
@@ -115,12 +116,20 @@ object TestTables {
   }
 
   // 3.1
-  def programmingLanguages1: Table = ???
+  def programmingLanguages1: Table = {
+    val func = NewCol("Functional", "Yes", Value(tableFunctional));
+    val oo = NewCol("Object-Oriented", "Yes", Value(tableObjectOriented));
+    val imp = NewCol("Imperative", "Yes", Value(tableImperative));
+    Merge("Language", func, Merge("Language", oo, imp)).eval.get
+  }
 
   // 3.2
-  val programmingLanguages2: Table = ???
+  val programmingLanguages2: Table =  Filter(And(Field("Original purpose", x => x.contains("Application")),
+      Field("Other paradigms", x => x.contains("concurrent"))),
+      Value(programmingLanguages1)).eval.get
 
   // 3.3
-  val programmingLanguages3: Table = ???
+  val programmingLanguages3: Table = Select(List("Language", "Object-Oriented",  "Functional"),
+    Value(programmingLanguages2)).eval.get
 
 }

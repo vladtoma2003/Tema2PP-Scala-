@@ -128,10 +128,8 @@ class Table(columnNames: Line, tabular: List[List[String]]) {
 
   // 2.3.
   def newCol(name: String, defaultVal: String): Table = {
-    println("default: " + defaultVal)
     val newColumnNames: Line = getColumnNames :+ name // adaug numele coloanei noi
     //adaug valorile default in tabela
-    println("tabular: " + getTabular)
     val newTabular: List[List[String]] = getTabular.map(row => row ::: List(defaultVal))
     Table((newColumnNames :: newTabular).map(_.mkString(",")).mkString("\n"))
     //    new Table(newColumnNames, newTabular)
@@ -204,12 +202,22 @@ class Table(columnNames: Line, tabular: List[List[String]]) {
       } else List()
 
       val newMatrix = (List(keyColumn)
-        :: restOfColumns1.map(x => m1Dif.drop(restOfColumns1.indexOf(x)).head +: x)
         :: col.map(x => commonColumnsNoKey.drop(col.indexOf(x)).head +: x)
+        :: restOfColumns1.map(x => m1Dif.drop(restOfColumns1.indexOf(x)).head +: x)
         :: restOfColumns2.map(x => m2Dif.drop(restOfColumns2.indexOf(x)).head +: x)
-        :: List()).filter(x => x.nonEmpty).flatten.transpose
+        :: List()).filter(x => x.nonEmpty).flatten
 
-      Option(Table(newMatrix.map(_.mkString(",")).mkString("\n")))
+      // reordonez coloanele
+      val newOrder = finalCol.map(x => {
+        val curOrder = newMatrix.map(_.head)
+        val curIndex = curOrder.indexOf(x)
+        if (curIndex == -1) List()
+        else {
+          newMatrix(curIndex)
+        }
+      })
+
+      Option(Table((newOrder.transpose).map(_.mkString(",")).mkString("\n")))
     }
   }
 }
